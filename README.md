@@ -2,7 +2,6 @@
 
 はじめてのGit
 
-これPythonで使いたいな
+Pythonを使いたい
 
-Ankiいじる
-
+AnkiとCompLiteをいじる

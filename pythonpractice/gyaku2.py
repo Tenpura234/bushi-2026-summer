@@ -2,6 +2,8 @@ import re
 import random
 from decimal import Decimal
 from fractions import Fraction
+from turtledemo.round_dance import stop
+
 #線形代数講義[増補版]p40の手順に従う
 #A = [[0,0,2,-3,1],[2,4,-8,8,-12],[1,2,-3,3,-4]]
 #A = [[0,0,2,-3,1],[0,5,-8,8,-12],[0,1,-3,3,-4]]
@@ -21,7 +23,7 @@ i = 0
 j = 0
 k = 0
 process_row = 0
-
+stop = False
 while process_row < len(A):
 
     i = process_row
@@ -31,8 +33,15 @@ while process_row < len(A):
         if i == len(A)-1 and A[i][j] == 0:
             i = process_row
             j = j + 1
+            if j > len(A[0]) - 1:
+                stop = True
+                break
             continue
+        if stop == True:
+            break
         i = i + 1
+    if j > len(A[0])-1:
+        break
     print(f"A{i+1,j+1}に注目")
     tmp_i = i
     tmp_j = j

@@ -1,7 +1,7 @@
 import re
 from decimal import Decimal
 from fractions import Fraction
-
+##Branchいけるかなテスト
 menu_words={"0": "加算 A + B",
             "1": "減算 A - B",
             "2": "乗算 A * B",

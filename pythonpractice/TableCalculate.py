@@ -1,7 +1,10 @@
 import re
 from decimal import Decimal
 from fractions import Fraction
-##Branchいけるかなテスト
+
+class Process:
+    
+
 menu_words={"0": "加算 A + B",
             "1": "減算 A - B",
             "2": "乗算 A * B",
@@ -95,6 +98,8 @@ j = 0
 k = 0
 out = 0
 
+
+    
 
 if int(menu) ==0 and len(A) == len(B) and len(A[0]) == len(B[0]):
     C= [[0 for j in range(len(B[0]))] for i in range(len(A))]

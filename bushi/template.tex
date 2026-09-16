@@ -1,0 +1,372 @@
+\documentclass[lualatex,paper=a4paper]{jlreq}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}  %以上必須パッケージ
+\usepackage{mathtools} %参照していない数式に番号をつけない
+\usepackage{graphicx}  %図を入れる
+\usepackage{multirow}  %表の列結合
+\usepackage{hyperref}  %文章内にリンクを貼る
+\usepackage{diffcoeff} %diff、diffpで微分記号を簡潔に書く
+\usepackage{comment}   %comment環境
+\usepackage{pdfpages}  %PDFページを直接挿入
+\usepackage{float}     %[H]指定子でその位置に強制的に図表を配置する
+\usepackage[version=4]{mhchem} %\ce{$n$H3O+}のようにして簡潔に化学式を書く
+\usepackage[separate-uncertainty]{siunitx}  %SI単位を\unitと\qtyを使ってより簡便に書く
+\usepackage[math-style=ISO,warnings-off={mathtools-colon,mathtools-overbracket}]{unicode-math} %Unicode文字を数式に書けるようにする
+\usepackage{newunicodechar} %Unicode文字を命令化できるようにする
+\usepackage{zref-clever}    %\crefで参照の種類に応じて「式」「図」「表」などと自動的に出力してくれる
+\usepackage{listings}       %ソースコードを簡単に書けるようにする
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mathtoolsset{showonlyrefs,showmanualtags} %参照されていない数式に番号をつけない
+\newunicodechar{、}{，}  %、を，に自動置換
+\newunicodechar{。}{．}  %。を．に自動置換
+\NewDocumentCommand\、{}{\string、} %\、で読点をそのまま出力
+\NewDocumentCommand\。{}{\string。} %\。で句点をそのまま出力
+\NewDocumentCommand\degC{}{\ensuremath{^\circ\symup{C}}} %摂氏温度記号
+\NewDocumentCommand\abs{m}{\left|#1\right|} %絶対値の記号
+\renewcommand{\lstlistingname}{コード} %listingsの環境名を「コード」に変更
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setmathfont{NewComputerModernMath}[
+    CharacterVariant = {1} %∅(空集合)の記号を一般的なものに変更
+]
+\setmathfont{NewComputerModernMath}[
+    range = {scr, bfscr},  %花文字のフォントを変更する、これがないと普通の筆記体として表示される
+    StylisticSet = 1
+]
+% zref-cleverの日本語設定
+\zcDeclareLanguage[allcaps]{japanese}
+\zcLanguageSetup{japanese}{
+  namesep   = {\nobreak} ,
+  pairsep   = {と} ,        % 複数個の参照をつなぐときの接続詞
+  listsep   = {、} ,        % 複数個の参照をつなぐときの接続詞（3個以上）
+  lastsep   = {、および} ,  % 複数個の参照をつなぐときの最後の接続詞（3個以上）
+  tpairsep  = {および} ,    % 複数個の異なる種類の参照をつなぐときの接続詞（2個）
+  tlistsep  = {、} ,        % 複数個の異なる種類の参照をつなぐときの接続詞（3個以上）
+  tlastsep  = {、および} ,  % 複数個の異なる種類の参照をつなぐときの最後の接続詞（3個以上）
+  notesep   = {：} ,        % 参照の後に注釈をつけるときの区切り
+  rangesep  = {から} ,      % 範囲指定のときの区切り
+  type = section ,          % 節の引用に関する設定
+    Name-sg = 第 ,
+    Name-pl = 第 ,
+    refbounds = {,,節,} ,
+  type = subsection ,       % 小節の引用に関する設定
+    Name-sg = 第 ,
+    Name-pl = 第 ,
+    refbounds = {,,小節,} ,
+  type = subsubsection ,    % 小小節の引用に関する設定
+    Name-sg = 第 ,
+    Name-pl = 第 ,
+    refbounds = {,,小小節,} ,
+  type = paragraph ,
+    Name-sg = 第 ,
+    Name-pl = 第 ,
+    refbounds = {,,段落,} ,
+  type = appendix ,
+    Name-sg = 付録 ,
+    Name-pl = 付録 ,
+  type = page ,             % ページの場合
+    Name-sg = p. ,
+    Name-pl = pp. ,
+    namesep = 〜 ,
+    rangesep = \textendash ,
+    rangetopair = false ,
+  type = figure ,
+    Name-sg = 図 ,
+    Name-pl = 図 ,
+  type = table ,
+    Name-sg = 表 ,
+    Name-pl = 表 ,
+  type = item ,
+    Name-sg = 項目 ,
+    Name-pl = 項目 ,
+  type = footnote ,
+    Name-sg = 脚注 ,
+    Name-pl = 脚注 ,
+  type = endnote ,
+    Name-sg = 後注 ,
+    Name-pl = 後注 ,
+  type = note ,
+    Name-sg = 注記 ,
+    Name-pl = 注記 ,
+  type = equation ,
+    Name-sg = 式 ,
+    Name-pl = 式 ,
+    refbounds = {,(,),} ,
+  type = listing ,
+    Name-sg = コード ,
+    Name-pl = コード ,
+}
+\zcsetup{ lang = japanese, nameinlink = true } % 日本語設定を有効化
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\lstset{%
+  basicstyle={\ttfamily}, % コード全体の書体
+  identifierstyle={\normalsize}, % キーワード以外のコードの書体
+  keywordstyle={\small\bfseries\color[rgb]{0.000, 0.000, 1.000}}, % キーワード(ifなど)の書体
+  backgroundcolor={\color[gray]{0.98}}, % 背景色
+  stringstyle={\small\ttfamily\color[rgb]{0.639, 0.082, 0.082}}, %文字列の書体
+  commentstyle={\small\ttfamily\color[rgb]{0.000, 0.502, 0.000}}, %コメントの書体
+  frame={tb}, % コードの上下に線を引く。lrを足すと左右にも線が引かれる
+  breaklines=true, % 行が長くなったときに自動で改行する
+  showstringspaces=false, % 文字列中のスペースを可視化(␣で表記)しない
+  columns=fixed, % 等角で文字を配置する
+  basewidth=0.5em, % 等幅フォントの文字幅を0.5emに設定
+  numbers=left, % 行番号を左に表示
+  xrightmargin=0\zw, %右側の余白を全角幅0に設定
+  xleftmargin=3\zw, %左側の余白(行番号表示部分)を全角幅3に設定
+  numberstyle={\scriptsize}, % 行番号の書体
+  stepnumber=1, % 行番号を1行ごとに表示
+  numbersep=1\zw, % 行番号とコードの間のスペースを全角幅1に設定
+  lineskip=-0.5ex % 行間を詰める
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% jlreqの設定を変更するためのコマンド
+% 詳細: https://tug.org/texlive//Contents/live/texmf-dist/doc/latex/jlreq/jlreq-ja.html
+\jlreqsetup{
+    appendix_counter={ %付録に入ったときの処理
+        section={
+            value=0,
+            the={\Alph{section}} %付番を戻してアルファベット(A, B, C...)に変更
+        },
+        table={
+            value=0,
+            the={\Alph{section}\arabic{table}} %表番号を付録のものに変更
+        },
+        figure={
+            value=0,
+            the={\Alph{section}\arabic{figure}} %図番号を付録のものに変更
+        }
+    },
+    appendix_heading={
+        section={
+            font=\normalsize\bfseries,
+            label_format={付録\thesection:} %付録の表記を変更
+        },
+        subsection={
+            font=\normalsize\bfseries
+        },
+        subsubsection={
+            font=\normalsize\bfseries
+        }
+    },
+    caption_font=\mcfamily, %図表の題を明朝体で出力する
+    caption_label_font=\mcfamily, %図表番号を明朝体にする
+    caption_label_format={#1:}, %「図1:」のようにする
+    caption_after_label_space=0.5\zw %:の後に全角幅半分のスペースを空ける
+}
+\ModifyHeading{section}{ %見出しの表示を変更
+    font=\normalsize\bfseries, %見出しのサイズを変更
+    lines=2, %見出しの行取りを変更
+    after_lines=0
+}
+\ModifyHeading{subsection}{ %小見出しの表示を変更
+    font=\normalsize\bfseries,
+    lines=2,
+    after_lines=0
+}
+\ModifyHeading{subsubsection}{ %小小見出しの表示を変更
+    font=\normalsize\bfseries,
+    lines=2,
+    after_lines=0
+}
+
+\title{\LaTeX テンプレート} % タイトルを入れる
+\author{電気通信大学 IX類 \\ %プログラムはもしあれば\\の直前に書く
+9999999 無敵太郎} % 学籍番号と名前を入れる
+\date{2112年9月3日作成 %\\ \today 更新% 再提出の際には\\の直前の%を取り除く
+}
+
+
+\begin{comment}
+このテンプレートはhydrogen(https://hydrogen1.dev)によって作成されました。改変や再頒布、どのように扱っても問題ありません。
+元々のテンプレートはこちら(https://gitlab.mma.club.uec.ac.jp/hydrogen/latex-template)にあります。
+邪魔であれば、このコメントの部分(\begin{comment}からend{comment}まで)を消してください。
+
+また、このテンプレートはLuaLaTeXを対象に作られています。
+改変していないテンプレートから正常にPDFを生成できない場合、以下のURLからTeXLiveをインストールしてください。
+https://mirror.ctan.org/systems/texlive/tlnet/install-tl-windows.exe
+\end{comment}
+
+\begin{document}
+%%% --- ここから書き始める
+
+%表紙が不要な場合は下の行頭の%を取り除く
+%\begin{comment}
+%\begin{titlepage}
+%    \includepdf{cover_sample.pdf} %表紙のPDFファイルを挿入する。
+%\end{titlepage}
+%\end{comment}
+%表紙が不要な場合は上の行頭の%を取り除く
+
+\maketitle %タイトルの出力
+
+
+\subsection{図の挿入}
+
+図は\verb|\includegraphics|を用いると挿入できる。大きすぎるなら縮尺を変更して収めることも可能だ。\zcref{fig-sample}に見本を示しておこう。
+%%
+%%\begin{figure}[ht]
+%%    \centering
+%%    \includegraphics[scale=0.9]{sample.png}
+%%    \caption{図のサンプル}
+%%    \label{fig-sample}
+%%\end{figure}
+%%
+
+\subsection{プログラムのソースコード}
+
+\begin{lstlisting}[language=Python,caption={サンプルプログラム},label=code-sample]
+import re
+from decimal import Decimal
+from fractions import Fraction
+
+class Input_matrix:
+    def __init__(self):
+        self.A = [[0]]
+        self.B = [[0]]
+        self.C = [[0]]
+        self.n = 0
+
+    def tableinput(self,a):
+        name = a
+        row = 0
+        row_count =0
+        i = 0
+        j = 0
+        pre = []
+        print(f"行列 {name} を入力\n入力例:1 1.2 2/3 351\n endと入力して行入力終了")
+
+        while row != "end":
+            row = input(str(i+1)+ "行目:")
+            if row == "end":
+                break
+            pre.insert(i, row)
+            row_count = len(pre[0].split())
+
+            if re.search(r"[^\d./ -]", row) and row != "end":
+                print("数字と-./以外入れるなボケ")
+                del pre[i]
+                continue
+
+            elif row_count != len(pre[int(i)].split()):
+                print("列数がちげーよボケ")
+                del pre[i]
+                continue
+
+            print(*pre, sep="\n")
+            i = i + 1
+            
+        a = [[Fraction(x) for x in s.split()] for s in pre]
+        print(f"\n行列{name}の入力終了")
+        print(*a, sep="\n")
+        return a
+
+    def numberinput(self,n):
+        while True:
+            n = input("倍数n:")
+            if re.search(r"[^\d./ -]", n):
+                print("数字と./-以外入れるなボケ")
+                continue
+            break
+        return n
+
+
+class Tablecalculate:
+    def __init__(self):
+        self.A = [[0]]
+        self.B = [[0]]
+        self.C = [[0]]
+        self.n = 0
+        
+    def simplify(self,a):
+        i = 0
+        j = 0
+        k = 0
+        process_row = 0
+        stop = False
+
+        gyoretsushiki = False
+        m = 1
+
+        while process_row < len(a):
+            i = process_row
+            j= 0
+        #Step1
+            while a[i][j] == 0:
+                if i == len(a)-1 and a[i][j] == 0:
+                    i = process_row
+                    j = j + 1
+                    if j > len(a[0]) - 1:
+                        stop = True
+                        break
+                    continue
+                if stop == True:
+                    break
+                i = i + 1
+            if j > len(a[0])-1:
+                break
+            print(f"a{i+1,j+1}に注目")
+            tmp_i = i
+            tmp_j = j
+        #Step2
+            k = process_row
+            while a[k][tmp_j] == 0:
+                k = k + 1
+            if process_row+1 != tmp_i+1:
+                for j in range(len(a[0])):
+                    tmp = a[process_row][j]
+                    a[process_row][j] = a[tmp_i][j]
+                    a[tmp_i][j] = tmp
+                print(f"{process_row+1}行目 ⇔ {tmp_i+1}行目")
+                if gyoretsushiki == True:
+                    m = -m
+                    print(f"倍数m:{m}")
+                tmp_i = process_row
+                self.output(a)
+        #Step3
+            if a[tmp_i][tmp_j] != 1:
+                k = a[tmp_i][tmp_j]
+                print(f"{tmp_i + 1}行目/ {k}")
+                if gyoretsushiki == True:
+                    m = m * k
+                    print(f"倍数m:{m}")
+                for j in range(len(a[0])):
+                    a[tmp_i][j] = Fraction(a[tmp_i][j] ,k)
+
+            self.output(a)
+        #Step4
+            for i in range(process_row if gyoretsushiki == True else 0, len(a)):
+                if a[i][tmp_j] != 0 and i != tmp_i:
+                    k = a[i][tmp_j]
+                    for j in range(len(a[0])):
+                        a[i][j] = a[i][j] - a[tmp_i][j] * k
+                    print(f"{i + 1}行目 - {tmp_i + 1}行目 × {k}")
+
+            self.output(a)
+            process_row = process_row + 1
+            print("row=",process_row)
+            if gyoretsushiki == True:
+                print(f"倍数m:{m}")
+        return a
+
+    def output(self,a):
+        b = [[0 for j in range(len(a[0]))] for i in range(len(a))]
+        for j in range(len(a[0])):
+            for i in range(len(a)):
+                b[i][j] = str(a[i][j])
+        print(" ", *b, sep="\n")
+        
+
+InputMatrix = Input_matrix()
+
+A = InputMatrix.tableinput("A")
+TableCalculate = Tablecalculate()
+result = TableCalculate.simplify(A)
+print("計算結果:")
+print(*result, sep="\n")
+\end{lstlisting}
+
+
+
+%%% --- ここまで
+\end{document}

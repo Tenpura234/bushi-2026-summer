@@ -1,4 +1,5 @@
 \documentclass[lualatex,paper=a4paper]{jlreq}
+\usepackage{enumitem}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -19,8 +20,8 @@
 \usepackage{listings}       %ソースコードを簡単に書けるようにする
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \mathtoolsset{showonlyrefs,showmanualtags} %参照されていない数式に番号をつけない
-\newunicodechar{、}{，}  %、を，に自動置換
-\newunicodechar{。}{．}  %。を．に自動置換
+%%\newunicodechar{、}{，}  %、を，に自動置換
+%%\newunicodechar{。}{．}  %。を．に自動置換
 \NewDocumentCommand\、{}{\string、} %\、で読点をそのまま出力
 \NewDocumentCommand\。{}{\string。} %\。で句点をそのまま出力
 \NewDocumentCommand\degC{}{\ensuremath{^\circ\symup{C}}} %摂氏温度記号
@@ -170,12 +171,9 @@
     after_lines=0
 }
 
-\title{ゼロからPythonで行列簡約化} % タイトルを入れる
-\author{電気通信大学 I類 \\ %プログラムはもしあれば\\の直前に書く
-tenpura} % 学籍番号と名前を入れる
-\date{\today %\\ \today 更新% 再提出の際には\\の直前の%を取り除く
-}
-
+\title{ゼロからpythonで行列の簡約化} % タイトルを入れる
+\author{MMA平部員 B1 Tenpura} % 学籍番号と名前を入れる
+\date{\today}
 
 \begin{comment}
 このテンプレートはhydrogen(https://hydrogen1.dev)によって作成されました。改変や再頒布、どのように扱っても問題ありません。
@@ -189,201 +187,163 @@ https://mirror.ctan.org/systems/texlive/tlnet/install-tl-windows.exe
 
 \begin{document}
 %%% --- ここから書き始める
-
 %表紙が不要な場合は下の行頭の%を取り除く
 %\begin{comment}
 %\begin{titlepage}
 %    \includepdf{cover_sample.pdf} %表紙のPDFファイルを挿入する。
 %\end{titlepage}
-%\end{comment}
+%%\end{comment}
 %表紙が不要な場合は上の行頭の%を取り除く
 
 \maketitle %タイトルの出力
-
-
-%%図は\verb|\includegraphics|を用いると挿入できる。大きすぎるなら縮尺を変更して収めることも可能だ。\zcref{fig-sample}に見本を示しておこう。
-%%
-%%\begin{figure}[ht]
-%%    \centering
-%%    \includegraphics[scale=0.9]{sample.png}
-%%    \caption{図のサンプル}
-%%    \label{fig-sample}
-%%\end{figure}
-%%
 \section{はじめに}
-B1でMMA平部員のTenpuraと申します。この記事ではpythonで行列の簡約化を実装するまでの道のりを書いていきます。
-やろうと思った動機は暗記支援アプリAnkiのアドオンを作りたくてアドオン作成マニュアル\footnote{\url{https://addon-docs.ankiweb.net/}}に従ったらよく分からない操作を延々させられて怖気づいて基礎から学びたくなったからです。あと線形代数で追試くらったからです。雪辱を果たしに。（単位はくれました）
+こんにちは。B1平部員のTenpuraです。この記事では夏休みに重い腰を上げて知識ゼロからPythonで行列式を書いてみた話をします。
+動機はAnkiのアドオン作りでPython書きの行き詰りによる萎え落ちを減らすことです。あと線形代数で追試くらったことです（単位はくれました）。雪辱を果たしに。
 
+\section{行列とは}
+行列は縦横に数を並べたものです。例えば
+$\begin{cases}
+        x + 2y - z = 2  \\
+        2x - y + 3z = 9 \\
+        3x + y + z = 8
+    \end{cases}$
+を
+$\begin{bmatrix}
+        1 & 2  & -1 & 2 \\
+        2 & -1 & 3  & 9 \\
+        3 & 1  & 1  & 8
+    \end{bmatrix}$
 
+のように書けます。シンプルですね。
+
+\section{簡約化とは}
+簡約化は、連立方程式を解く際に行列の値を都合よくする操作です。実際中学からの連立方程式の解き方まんまで、式同士の足し算、引き算、掛け算をします。
+例えば、３つの式を上から①②③として、
+
+$$\begin{bmatrix}
+        1 & 2  & -1 & 2 \\
+        2 & -1 & 3  & 9 \\
+        3 & 1  & 1  & 8
+    \end{bmatrix}
+    \xrightarrow[\text{③}-3\times\text{①}]{\text{②}-2\times\text{①}}
+    \begin{bmatrix}
+        1 & 2  & -1 & 2 \\
+        0 & -5 & 5  & 5 \\
+        0 & -5 & 4  & 2
+    \end{bmatrix}
+    \xrightarrow{\text{②}\times(-\frac{1}{5})}
+    \begin{bmatrix}
+        1 & 2  & -1 & 2  \\
+        0 & 1  & -1 & -1 \\
+        0 & -5 & 4  & 2
+    \end{bmatrix}$$
+$$\xrightarrow[\text{③}+5\times\text{②}]{\text{①}-2\times\text{②}}
+    \begin{bmatrix}
+        1 & 0 & 1  & 4  \\
+        0 & 1 & -1 & -1 \\
+        0 & 0 & -1 & -3
+    \end{bmatrix}
+    \xrightarrow{\text{③}\times(-1)}
+    \begin{bmatrix}
+        1 & 0 & 1  & 4  \\
+        0 & 1 & -1 & -1 \\
+        0 & 0 & 1  & 3
+    \end{bmatrix}
+    \xrightarrow[\text{②}+\text{③}]{\text{①}-\text{③}}
+    \begin{bmatrix}
+        1 & 0 & 0 & 1 \\
+        0 & 1 & 0 & 2 \\
+        0 & 0 & 1 & 3
+    \end{bmatrix}$$
+と変形します（行基本変形と言います）。最後の行列は
+
+$$\begin{cases}
+        x + 0 + 0 = 1 \\
+        0 + y + 0 = 2 \\
+        0 + 0 + z = 3
+    \end{cases}$$
+
+となり、良い感じに文字の値が分かります。
+この操作を言語化すると、\\
+\hrulefill
+\begin{verbatim}
+1.すべての成分が0でない列のうち、一番左の列に注目する。
+2.注目した列の一番上の数が0のときは、0でない行と入れ替える。
+3.第1行を何倍かして主成分をつくる。
+4.第1行を何倍かして他の行に加えて、主成分の上下にある成分をすべて0にする。
+5.第1行を忘れ、残った行で1～4を繰り返す。
+\end{verbatim}
+\hrulefill\\
+となります。\footnote{培風館 線形代数学講義[増補版] 木田雅成 著 P40 Ⅲ.7より引用}
+我々B1は4月の不安な時期にこれを頭に叩き込んだと思います。\\
+個人的な話ですが4行4列よりサイズが大きくなると必ず計算ミスをします。どうにかしたい。
+
+\section{計画}
+今回はこれをPythonで実装します。しかし、上記の説明のまま実装しようとすると割と苦労します。例えば5.で繰り返しの操作がありますが、コードで書くには行数を文字で置いたりして一般化する必要があります。そこで、以下のように書き換えます。\\
+\hrulefill
+\begin{verbatim}
+行列を縦I、横Jの大きさとする。
+1.左の列から右の列へ、k行目（はじめk=1）から順に0でない数を探す。
+  はじめに見つかった数をnとする。
+2.nがある行をk行目と入れ替える。
+3.k行目をnで割る。
+4.k行目以外の行からk行目を何倍かして引き、nと同じ列のn以外の数を0にする。
+5.kに1を加え、1.からやり直す。k>Iとなるか、
+  1.で0でない数が見つからなくなったとき、計算を終了する。
+\end{verbatim}
+\hrulefill\\
+使いやすい文字をいくつか入れてみました。いっぺんに実装を考えるときついですが、順番ごとに考えるとなんかいけそうな気がします。こっからPythonを書いていきましょう！
 \section{実装}
-では作ってきたものを一つ一つ説明します。ラバーダック・デバッグって言いますよね。
-コードの表示にM1の水素さんの\LaTeX テンプレートを使いました。非常に便利なのでここ\footnote{\url{https://gitlab.mma.club.uec.ac.jp/hydrogen/latex-template}}から使いましょう。
+\subsection{Pythonでの行列}
+\subsection{リスト内包表記}
+Pythonで行列のような二次元リストを扱う際、リスト内包表記が便利です。リストの中にリストを入れる書き方です。
+例えば$\begin{cases}
+        x + 2y - z = 2  \\
+        2x - y + 3z = 9 \\
+        3x + y + z = 8
+    \end{cases}$
+を$\begin{aligned}
+        a =[[1,2,-1,2], \\
+        [2,-1,3,9],     \\
+        [3, 1,1,8]]     \\
+    \end{aligned}$
+と書きます。\\一行に直すと
+a =[[1,2,-1,2],[2,-1,3,9],[3,1,1,8]]となります。
+また、i行j列目、すなわち$a_ij$は
+今回はこの行列aを演算対象とします。
+\subsection{numpy}
+他にはnumpyというライブラリを使う方法もあります。こちらもリスト内包表記に似ていますが、こちらは行列自体を扱うことができます。更に簡約化はもちろん逆行列、行列式も1行で求めてくれます。よって今回の簡約化実装は車輪の最発明となります。
 
 
 
 
-\begin{lstlisting}[language=Python,caption={おまじない},label=code-sample]
-import re
-from decimal import Decimal
-from fractions import Fraction
+プログラムのソースコードをレポートに載せたいときは、listingsパッケージを利用して\verb|lstlisting|環境で囲むと良いだろう。例えば、\zcref{code-sample}のように書くとPythonのコードがきれいに表示される。
+
+\begin{lstlisting}[language=Python,caption={サンプルプログラム},label=code-sample]
+def hello():
+    print("Hello, World!")
+
+if __name__ == "__main__":
+    hello() # この行はコメントです
 \end{lstlisting}
 
-いわゆるおまじないです。競技プログラミングなどで全く意味はわからないけどなんか書かされるやつ。
-一応意味はググったら出ます。
+\subsection{参考文献の明示}
 
-\begin{itemize}
- \item import re\\
-  Pythonで正規表現を扱うためのパッケージです。例えば後述の改行を表す\verb|\n|などで動いています。
+レポートを書く上では他の文献から情報を得ることも多いであろう。こういう時は、thebibliography環境に参考文献として書籍やネットの記事を並べて出典を明確にするべきである。
+ネット上の情報の引用の際には\verb|\url|マクロを利用して\url{https://www.example.com/}のように書くと良いだろう\cite{texbook}。
 
- \item from decimal import Decimal\\
- 少数を精度よく扱うためのパッケージです。これが無い時は少数を計算する際にfloatと呼ばれる高速な計算方式を使いますが、
-$0.1 + 0.2 = 0.30000000000000004$ のように、非常に小さい誤差を出します。これを無くすために低速だけども正確な計算方式decimalを使います。
+参考文献を書くときは、\verb|\bibitem|マクロを用いて文献を列挙する。このマクロに指定したラベルを\verb|\cite|マクロで参照することで、文献番号を出力できる。
 
- \item from fractions import Fraction\\
- 分数を扱うためのパッケージです。今回は割り算をしまくるので必須。電卓を使った日を覚えていますか？四則演算は瞬時にできますが割り算はきれいに表示できないやつ。これを使えば、あの0.333333とかの循環小数を1/3と綺麗に表示してくれる計算機が作れます！感動。
-\end{itemize}
+\begin{thebibliography}{99}
+    \bibitem{texbook} 奥村晴彦，黒木裕介， [改訂第8版] LaTeX2ε美文書作成入門，技術評論社，2020.
+\end{thebibliography}
 
+\appendix
 
-\begin{lstlisting}[language=Python,caption={行列入力},label=code-sample]
-class Input_matrix:
+\section{付録の書き方}
 
-    def tableinput(self,a):
-        name = a
-        row = 0
-        i = 0
-        pre = []
-        print(f"行列 {name} を入力\n入力例:16 1.2 2/3 \nendと入力して行入力終了")
-
-        while row != "end":
-            row = input(str(i+1)+ "行目:")
-            if row == "end":
-                break
-            pre.insert(i, row)
-            row_count = len(pre[0].split())
-
-            if re.search(r"[^\d./ -]", row) and row != "end":
-                print("数字と-./以外入れるなボケ")
-                del pre[i]
-                continue
-
-            elif row_count != len(pre[int(i)].split()):
-                print("列数がちげーよボケ")
-                del pre[i]
-                continue
-
-            print(*pre, sep="\n")
-            i = i + 1
-            
-        a = [[Fraction(x) for x in s.split()] for s in pre]
-        print(f"\n行列{name}の入力終了")
-        print(*a, sep="\n")
-        return a
-\end{lstlisting}
-
-後のプログラムで計算させる行列を入力させます。入力方式は整数,少数,分数を空白区切りで入力する方式です。行の入力が終わったらenterを押して、すべての入力が終わったらendと入力します。
-
-まず
-
-
-\begin{lstlisting}[language=Python,caption={行列計算},label=code-sample]
-
-
-class Tablecalculate:
-    def __init__(self):
-        self.A = [[0]]
-        self.B = [[0]]
-        self.C = [[0]]
-        self.n = 0
-        
-    def simplify(self,a):
-        i = 0
-        j = 0
-        k = 0
-        process_row = 0
-        stop = False
-
-        gyoretsushiki = False
-        m = 1
-
-        while process_row < len(a):
-            i = process_row
-            j= 0
-        #Step1
-            while a[i][j] == 0:
-                if i == len(a)-1 and a[i][j] == 0:
-                    i = process_row
-                    j = j + 1
-                    if j > len(a[0]) - 1:
-                        stop = True
-                        break
-                    continue
-                if stop == True:
-                    break
-                i = i + 1
-            if j > len(a[0])-1:
-                break
-            print(f"a{i+1,j+1}に注目")
-            tmp_i = i
-            tmp_j = j
-        #Step2
-            k = process_row
-            while a[k][tmp_j] == 0:
-                k = k + 1
-            if process_row+1 != tmp_i+1:
-                for j in range(len(a[0])):
-                    tmp = a[process_row][j]
-                    a[process_row][j] = a[tmp_i][j]
-                    a[tmp_i][j] = tmp
-                print(f"{process_row+1}行目 ⇔ {tmp_i+1}行目")
-                if gyoretsushiki == True:
-                    m = -m
-                    print(f"倍数m:{m}")
-                tmp_i = process_row
-                self.output(a)
-        #Step3
-            if a[tmp_i][tmp_j] != 1:
-                k = a[tmp_i][tmp_j]
-                print(f"{tmp_i + 1}行目/ {k}")
-                if gyoretsushiki == True:
-                    m = m * k
-                    print(f"倍数m:{m}")
-                for j in range(len(a[0])):
-                    a[tmp_i][j] = Fraction(a[tmp_i][j] ,k)
-
-            self.output(a)
-        #Step4
-            for i in range(process_row if gyoretsushiki == True else 0, len(a)):
-                if a[i][tmp_j] != 0 and i != tmp_i:
-                    k = a[i][tmp_j]
-                    for j in range(len(a[0])):
-                        a[i][j] = a[i][j] - a[tmp_i][j] * k
-                    print(f"{i + 1}行目 - {tmp_i + 1}行目 × {k}")
-
-            self.output(a)
-            process_row = process_row + 1
-            print("row=",process_row)
-            if gyoretsushiki == True:
-                print(f"倍数m:{m}")
-        return a
-
-    def output(self,a):
-        b = [[0 for j in range(len(a[0]))] for i in range(len(a))]
-        for j in range(len(a[0])):
-            for i in range(len(a)):
-                b[i][j] = str(a[i][j])
-        print(" ", *b, sep="\n")
-        
-
-InputMatrix = Input_matrix()
-
-A = InputMatrix.tableinput("A")
-TableCalculate = Tablecalculate()
-result = TableCalculate.simplify(A)
-print("計算結果:")
-print(*result, sep="\n")
-\end{lstlisting}
-
-
+本文に書くべきではない細かい計算や、導出は付録として別個にまとめることが多い。付録に入る際は\verb|\appendix|マクロを用いる。その後、附番はアルファベットになり表番号や図番号の表記も変更される。
+なお、\verb|\appendix|は1度書いた後はもう書く必要はない。
 
 %%% --- ここまで
 \end{document}

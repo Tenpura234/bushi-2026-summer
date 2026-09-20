@@ -86,15 +86,9 @@ def simplify(a):
     return a
 
 def output(a):
-    b = [[0 for j in range(len(a[0]))] for i in range(len(a))]
-    for j in range(len(a[0])):
-        for i in range(len(a)):
-            b[i][j] = str(a[i][j])
-    print(" ", *b, sep="\n")
+    for i in a: print([str(x) for x in i])
         
 
 
-#A = tableinput("A")
-result = simplify(A)
 print("計算結果:")
-output(result)
+output(simplify(A))

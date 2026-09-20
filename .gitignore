@@ -2,6 +2,6 @@ node_modules/   # フォルダごと無視
 *.log           # 拡張子 .log のファイルすべて
 .env            # 秘密情報を書きがちなファイル
 .DS_Store       # macOS が作る不要ファイル
-.aux
-.log
-.out
+*.aux
+*.log
+*.out

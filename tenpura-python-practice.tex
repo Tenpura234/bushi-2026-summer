@@ -322,7 +322,7 @@ A =[[1,2,-1,2],[2,-1,3,9],[3,1,1,8]]となります。\\
         列数                & len(a[0])   \\ \hline
     \end{tabular}
 \end{table}
-注意！！Pythonのリストは順番を0から数えます。例えば$a_{23}$はa[1][2]です。この数え方は大体のプログラミング言語で共通し、度々間違えてバグの温床となります。私は現在進行形で間違えます。記事のどっかには絶対間違ってますが許して～～～
+注意！！Pythonのリストは順番を0から数えます。例えば$a_{23}$はa[1][2]です。この数え方は大体のプログラミング言語で共通し、度々間違えてバグの温床となります。私は現在進行形で間違えます。記事のどっかで絶対間違ってますが許して～～～
 
 \subsection{numpy,simpy}
 他にはnumpyやsimpyというライブラリ\footnote{便利機能が集まっている道具箱}で行列を扱えます。こちらは簡約化、行列式の計算、単位行列、ゼロ行列などのプリセットが入っていて、行列でやりたい操作は大体何でもできます。例えば今回実装する簡約化はAを行列としてA.rref()で終わります。これで終わるのはさすがにおもんなさすぎるので、今回はリスト内包表記で頑張ります。
@@ -338,10 +338,11 @@ from fractions import Fraction
 「re」は正規表現、「Decimal」は正確な小数計算、「Fraction」は分数を扱います。どれも便利。
 
 \section{実装}
-ようやく実装に入ります。\ref{plan}章に従ってコードを書いていきます。\\
-テストの際おまじないを忘れないでください。また、使う行列はA =[[1,2,-1,2],[2,-1,3,9],[3,1,1,8]]として、以下のように実装していきます。
+ようやく実装に入ります。\ref{plan}章に従って以下の形でコードを書いていきます。
+これは\ref{plan}章の操作5番目にあたるコードです。おまじないと行列Aを用意した後、関数simplify(a)で行列を簡約化し、計算終了時に関数output(a)で行列を表示します。
 
-\begin{lstlisting}[language=Python,caption={概形},label=code-sample]
+%%ここに操作の長い説明を入れるべきかよく考えること。
+\begin{lstlisting}[language=Python,caption={kに1を加え、1.からやり直す。1.でk>Iとなるか、J列目を超えたとき、計算を終了する。},label=code-sample]
 import re
 from decimal import Decimal
 from fractions import Fraction
@@ -366,10 +367,8 @@ output(simplify(A))
 \end{lstlisting}
 
 
+\newpage
 \begin{lstlisting}[language=Python,caption={左から右の列へ、各列でk行目から順に0でない数を探す。はじめに見つかる数をnとする。},label=code-sample]
-def simplify(a):
-    k = 0
-    while k < len(a):
         i = process_row
         j = 0
         while j < len(a[0]) and a[i][j] == 0:
@@ -384,6 +383,47 @@ def simplify(a):
         tmp_i = i
         tmp_j = j
 \end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption= {nがある行をk行目と入れ替える。},label=code-sample]
+        l = k
+        while a[l][tmp_j] == 0:
+            l = l + 1
+        if k+1 != tmp_i+1:
+            for j in range(len(a[0])):
+                tmp = a[k][j]
+                a[k][j] = a[tmp_i][j]
+                a[tmp_i][j] = tmp
+            print(f"{k+1}行目 ⇔ {tmp_i+1}行目")
+            tmp_i = k
+            output(a)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption= {k行目をnで割る。},label=code-sample]
+        if a[tmp_i][tmp_j] != 1:
+            l = a[tmp_i][tmp_j]
+            print(f"{tmp_i + 1}行目/ {l}")
+            for j in range(len(a[0])):
+                a[tmp_i][j] = Fraction(a[tmp_i][j] ,l)
+        output(a)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption= {4.k行目以外の行からk行目を何倍かして引き、nと同じ列のn以外の数を0にする。},label=code-sample]
+            for i in range(0, len(a)):
+            if a[i][tmp_j] != 0 and i != tmp_i:
+                l = a[i][tmp_j]
+                for j in range(len(a[0])):
+                    a[i][j] = a[i][j] - a[tmp_i][j] * l
+                print(f"{i + 1}行目 - {tmp_i + 1}行目 × {l}")
+        output(a)
+        k = k + 1
+        print("row=",k)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption= {見た目の処理},label=code-sample]
+    for i in a: print([str(x) for x in i])
+\end{lstlisting}
+
+
 
 
 プログラムのソースコードをレポートに載せたいときは、listingsパッケージを利用して\verb|lstlisting|環境で囲むと良いだろう。例えば、\zcref{code-sample}のように書くとPythonのコードがきれいに表示される。

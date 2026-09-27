@@ -16,3 +16,5 @@ print(C)
 
 C = [[0 for j in range(len(matrix[0]))] for i in range(len(matrix))]
 print(C)
+
+print( 0.1 + 0.2)
